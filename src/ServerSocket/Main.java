@@ -4,6 +4,8 @@ import java.io.*;
 import java.net.Inet4Address;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 
 public class Main {
@@ -15,6 +17,7 @@ public class Main {
             InputStream inS;
             OutputStream outS;
             String websiteroot = "F:\\Toogas\\Tahun 3\\Progjar\\server1\\";
+
             System.out.println(1 + ". Create server and client socket");
             // ServerSocket serverSocket = new ServerSocket(6666, 5, inet4Address);
             ServerSocket serverSocket = new ServerSocket(80);
@@ -31,25 +34,35 @@ public class Main {
                 BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outS));
 
                 String message = bufferedReader.readLine();
-                System.out.println(message);
+//                System.out.println(message);
                 String urn = new String();
+                String domain = new String();
                 if(message != null){
                     urn = message.split(" ")[1].substring(1);
                 }
-//                System.out.println(urn);
+                System.out.println("domain: "+message);
+                int i = 0;
                 while (message != null && !message.isEmpty()) {
-//                    System.out.println(message);
+                    if(i==1) {
+                        System.out.println(message.substring(message.indexOf(" ") + 1));
+                        domain = message.substring(message.indexOf(" ") + 1);
+                    }
                     message = bufferedReader.readLine();
+                    i++;
                 }
                 String fileContent;
                 String statusCode;
                 try {
                     String extension = new String();
-                    if(urn != null && !urn.isEmpty()){
-                        System.out.println(urn);
+                    if(urn != null && !urn.isEmpty() && urn.contains(".")){
+                        System.out.println("URN: "+urn);
                         extension = urn.split("[.]")[1];
                     }
-                    System.out.println(extension);
+
+                    if(urn.isEmpty()){
+                        System.out.println("null URN");
+                    }
+//                    System.out.println("extension: "+urn);
                     if (extension.equalsIgnoreCase("png")){
                         File file = new File(websiteroot + urn);
                         FileInputStream fis = new FileInputStream(file);
@@ -85,13 +98,128 @@ public class Main {
                         binaryOut.flush();
                         binaryOut.close();
                     }else{
-                        FileInputStream fileInputStream = new FileInputStream(websiteroot + urn);
-                        fileContent = new String(fileInputStream.readAllBytes());
-                        statusCode = "200 OK";
-                        bufferedWriter.write("HTTP/1.0 " + statusCode + "\r\nContent-Type: text/html\r\nContent-Length: " + fileContent.length() + "\r\n");
-                        bufferedWriter.write("\r\n");
-                        bufferedWriter.write(fileContent);
-                        bufferedWriter.flush();
+                        if(urn.isEmpty()){
+                            File files = new File(websiteroot + urn);
+                            String[] fileList = files.list();
+                            StringBuilder response = new StringBuilder("""
+                                <!DOCTYPE html>
+                                <html lang="en">
+                                <head>
+                                    <meta charset="UTF-8">
+                                    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+                                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                    <link rel="icon" type="image/x-icon" href="https://pngimg.com/uploads/letter_p/letter_p_PNG46.png">
+                                    <title>FILE LIST</title>
+                
+                                    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+                                </head>
+                                <body>
+                                <div class="container">
+                                <table class="table table-striped">
+                                    <thead>
+                                    <tr>
+                                        <th>File/Folder Name</th>
+                                        <th>Type</th>
+                                        <th>Last Modified</th>
+                                        <th>Size (Byte)</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                            """);
+                            assert fileList != null;
+                            for(String fileName : fileList) {
+                                response.append("    <tr>\n");
+                                File file = new File(files+"/"+fileName);
+                                SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+                                String lastModified = sdf.format(file.lastModified());
+//                                if(urn.charAt(urn.length()-1)=='/')
+//                                    urn = urn.substring(0, urn.length()-1);
+                                response.append("        <td><a href=\"/").append(fileName).append(file.isFile() ? "" : "/").append("\">").append(fileName).append("</a></td>\n");
+                                response.append(file.isFile() ? "        <td>File</td>\n" : "        <td>Folder</td>\n");
+                                response.append("        <td>").append(lastModified).append("</td>\n");
+                                response.append("        <td>").append(Files.size(file.toPath())).append("</td>\n");
+
+                                response.append("    </tr>\n");
+                            }
+
+                            response.append("""
+                                </tbody>
+                                </table>
+                                </div>
+                                </body>
+                            </html>""");
+
+                            statusCode = "200 OK";
+                            bufferedWriter.write("HTTP/1.0 " + statusCode + "\r\nContent-Type: text/html\r\nContent-Length: " + response.toString().length() + "\r\n");
+                            bufferedWriter.write("\r\n");
+                            bufferedWriter.write(response.toString());
+                            bufferedWriter.flush();
+                        }else if(urn.charAt(urn.length()-1)=='/'){
+                            System.out.println("Masuk Folder");
+                            File files = new File(websiteroot + urn);
+                            String[] fileList = files.list();
+                            StringBuilder response = new StringBuilder("""
+                                <!DOCTYPE html>
+                                <html lang="en">
+                                <head>
+                                    <meta charset="UTF-8">
+                                    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+                                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                    <link rel="icon" type="image/x-icon" href="https://pngimg.com/uploads/letter_p/letter_p_PNG46.png">
+                                    <title>FILE LIST</title>
+                
+                                    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+                                </head>
+                                <body>
+                                <div class="container">
+                                <table class="table table-striped">
+                                    <thead>
+                                    <tr>
+                                        <th>File/Folder Name</th>
+                                        <th>Type</th>
+                                        <th>Last Modified</th>
+                                        <th>Size (Byte)</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                            """);
+                            assert fileList != null;
+                            for(String fileName : fileList) {
+                                response.append("    <tr>\n");
+                                File file = new File(files+"/"+fileName);
+                                SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+                                String lastModified = sdf.format(file.lastModified());
+//                                if(urn.charAt(urn.length()-1)=='/')
+//                                    urn = urn.substring(0, urn.length()-1);
+                                response.append("        <td><a href=\"/").append(urn).append(fileName).append(file.isFile() ? "" : "/").append("\">").append(fileName).append("</a></td>\n");
+                                response.append(file.isFile() ? "        <td>File</td>\n" : "        <td>Folder</td>\n");
+                                response.append("        <td>").append(lastModified).append("</td>\n");
+                                response.append("        <td>").append(Files.size(file.toPath())).append("</td>\n");
+
+                                response.append("    </tr>\n");
+                            }
+
+                            response.append("""
+                                </tbody>
+                                </table>
+                                </div>
+                                </body>
+                            </html>""");
+
+                            statusCode = "200 OK";
+                            bufferedWriter.write("HTTP/1.0 " + statusCode + "\r\nContent-Type: text/html\r\nContent-Length: " + response.toString().length() + "\r\n");
+                            bufferedWriter.write("\r\n");
+                            bufferedWriter.write(response.toString());
+                            bufferedWriter.flush();
+                        }else{
+                            FileInputStream fileInputStream = new FileInputStream(websiteroot + urn);
+                            fileContent = new String(fileInputStream.readAllBytes());
+                            statusCode = "200 OK";
+                            bufferedWriter.write("HTTP/1.0 " + statusCode + "\r\nContent-Type: text/html\r\nContent-Length: " + fileContent.length() + "\r\n");
+                            bufferedWriter.write("\r\n");
+                            bufferedWriter.write(fileContent);
+                            bufferedWriter.flush();
+                        }
                     }
                 } catch (FileNotFoundException e) {
                     FileInputStream fileInputStream = new FileInputStream(websiteroot + "NotFound.html");

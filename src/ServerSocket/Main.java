@@ -52,6 +52,11 @@ public class Main {
                 }
                 String fileContent;
                 String statusCode;
+
+                if(domain.equalsIgnoreCase("progjar.com")){
+                    System.out.println("Masuk server 2");
+                    websiteroot = "F:\\Toogas\\Tahun 3\\Progjar\\server2\\";
+                }
                 try {
                     String extension = new String();
                     if(urn != null && !urn.isEmpty() && urn.contains(".")){
@@ -127,7 +132,12 @@ public class Main {
                                     <tbody>
                             """);
                             assert fileList != null;
+                            boolean flag = false;
                             for(String fileName : fileList) {
+                                System.out.println("filename : "+fileName);
+                                if(fileName.equalsIgnoreCase("index.html")){
+                                    flag = true;
+                                }
                                 response.append("    <tr>\n");
                                 File file = new File(files+"/"+fileName);
                                 SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
@@ -152,7 +162,13 @@ public class Main {
                             statusCode = "200 OK";
                             bufferedWriter.write("HTTP/1.0 " + statusCode + "\r\nContent-Type: text/html\r\nContent-Length: " + response.toString().length() + "\r\n");
                             bufferedWriter.write("\r\n");
-                            bufferedWriter.write(response.toString());
+                            if(flag == false){
+                                bufferedWriter.write(response.toString());
+                            }else{
+                                FileInputStream fileInputStream = new FileInputStream(websiteroot + "index.html");
+                                fileContent = new String(fileInputStream.readAllBytes());
+                                bufferedWriter.write(fileContent);
+                            }
                             bufferedWriter.flush();
                         }else if(urn.charAt(urn.length()-1)=='/'){
                             System.out.println("Masuk Folder");

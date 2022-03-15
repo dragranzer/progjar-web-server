@@ -19,8 +19,7 @@ public class Main {
 
             Config config = new Config(confPath);
 
-            String websiteroot = config.getRoot();
-//            String websiteroot = "F:\\Toogas\\Tahun 3\\Progjar\\server1\\";
+            String websiteroot = config.getRoot1();
 
             System.out.println(1 + ". Create server and client socket");
             ServerSocket serverSocket = new ServerSocket(Integer.parseInt(config.getPort()),5, InetAddress.getByName(config.getIp()));
@@ -37,7 +36,9 @@ public class Main {
                 BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outS));
 
                 String message = bufferedReader.readLine();
-//                System.out.println(message);
+                System.out.println(message);
+
+//                System.out.println(msg);
                 String urn = "";
                 String domain = "";
 
@@ -46,20 +47,28 @@ public class Main {
                 }
                 System.out.println("domain: "+message);
                 int i = 0;
+                String connection="";
                 while (message != null && !message.isEmpty()) {
+//                    System.out.println("i = "+ i + " " + message);
                     if(i==1) {
                         System.out.println(message.substring(message.indexOf(" ") + 1));
                         domain = message.substring(message.indexOf(" ") + 1);
                     }
+                    if(i==2){
+                        int conIndex = ("Connection: ").length();
+                        connection = message.substring(conIndex);
+//                        System.out.println("CONNECTION = "+connection);
+                    }
                     message = bufferedReader.readLine();
                     i++;
+
                 }
                 String fileContent;
                 String statusCode;
 
                 if(domain.equalsIgnoreCase("progjar.com")){
                     System.out.println("Masuk server 2");
-                    websiteroot = "D:\\ITS\\Semester 6\\Progjar\\Server2\\";
+                    websiteroot = config.getRoot2();
                 }
                 try {
                     String extension = "";
@@ -251,16 +260,12 @@ public class Main {
                     bufferedWriter.write(fileContent);
                     bufferedWriter.flush();
                 }
-
-
-                client.close();
+                if(connection.equals("close"))
+                    client.close();
             }
-
 //            System.out.println("Message from client: " + message);
-//
 //            System.out.println(6 + ". Close the server");
 //            serverSocket.close();
-
         } catch (IOException e) {
             e.printStackTrace();
         }

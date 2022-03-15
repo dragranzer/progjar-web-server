@@ -1,26 +1,29 @@
 package ServerSocket;
 
 import java.io.*;
-import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 
 public class Main {
     public static void main(String[] args) {
-//        System.out.println("Helloworld");
-//        String HTML = "./src/ServerSocket/";
         try {
-            // Inet4Address inet4Address = (Inet4Address) Inet4Address.getLoopbackAddress();
             InputStream inS;
             OutputStream outS;
-            String websiteroot = "F:\\Toogas\\Tahun 3\\Progjar\\server1\\";
+            String conf = "\\src\\ServerSocket\\file.conf";
+
+            String confPath = new File("").getAbsolutePath().concat(conf);
+            System.out.println(confPath);
+
+            Config config = new Config(confPath);
+
+            String websiteroot = config.getRoot();
+//            String websiteroot = "F:\\Toogas\\Tahun 3\\Progjar\\server1\\";
 
             System.out.println(1 + ". Create server and client socket");
-            // ServerSocket serverSocket = new ServerSocket(6666, 5, inet4Address);
-            ServerSocket serverSocket = new ServerSocket(80);
+            ServerSocket serverSocket = new ServerSocket(Integer.parseInt(config.getPort()),5, InetAddress.getByName(config.getIp()));
             System.out.println(2);
 
             while(true){
@@ -35,8 +38,9 @@ public class Main {
 
                 String message = bufferedReader.readLine();
 //                System.out.println(message);
-                String urn = new String();
-                String domain = new String();
+                String urn = "";
+                String domain = "";
+
                 if(message != null){
                     urn = message.split(" ")[1].substring(1);
                 }
@@ -55,10 +59,10 @@ public class Main {
 
                 if(domain.equalsIgnoreCase("progjar.com")){
                     System.out.println("Masuk server 2");
-                    websiteroot = "F:\\Toogas\\Tahun 3\\Progjar\\server2\\";
+                    websiteroot = "D:\\ITS\\Semester 6\\Progjar\\Server2\\";
                 }
                 try {
-                    String extension = new String();
+                    String extension = "";
                     if(urn != null && !urn.isEmpty() && urn.contains(".")){
                         System.out.println("URN: "+urn);
                         extension = urn.split("[.]")[1];
@@ -162,7 +166,7 @@ public class Main {
                             statusCode = "200 OK";
                             bufferedWriter.write("HTTP/1.0 " + statusCode + "\r\nContent-Type: text/html\r\nContent-Length: " + response.toString().length() + "\r\n");
                             bufferedWriter.write("\r\n");
-                            if(flag == false){
+                            if(!flag){
                                 bufferedWriter.write(response.toString());
                             }else{
                                 FileInputStream fileInputStream = new FileInputStream(websiteroot + "index.html");

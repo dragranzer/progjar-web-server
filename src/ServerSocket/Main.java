@@ -2,6 +2,7 @@ package ServerSocket;
 
 import java.io.*;
 import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
@@ -20,7 +21,10 @@ public class Main {
 
             System.out.println(1 + ". Create server and client socket");
             // ServerSocket serverSocket = new ServerSocket(6666, 5, inet4Address);
-            ServerSocket serverSocket = new ServerSocket(80);
+            InetAddress ia = InetAddress.getByName("0.0.0.0");
+            System.out.println("Inet Adress" + ia);
+            ServerSocket serverSocket = new ServerSocket(80,5, ia);
+
             System.out.println(2);
 
             while(true){
@@ -46,6 +50,8 @@ public class Main {
                     if(i==1) {
                         System.out.println(message.substring(message.indexOf(" ") + 1));
                         domain = message.substring(message.indexOf(" ") + 1);
+                    }else{
+                        System.out.println(message);
                     }
                     message = bufferedReader.readLine();
                     i++;
